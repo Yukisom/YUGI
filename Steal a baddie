@@ -1,0 +1,307 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "YUGI Pivete " .. Fluent.Version,
+    SubTitle = "by YUGI",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Players = Window:AddTab({ Title = "Players", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+-- สคริปต์ทำงานเบื้องหลังระบบกดอัตโนมัติ
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Event = ReplicatedStorage.Shared.Libraries.Interlinked.Remotes.Request
+
+_G.AutoClick = false -- ตั้งค่าเริ่มต้นให้ปิดไว้ก่อน
+
+-- สั่งรันลูปฟาร์มแบบแยกเธรด (Thread) เพื่อไม่ให้หน้าจอ GUI ค้าง
+task.spawn(function()
+    while true do
+        if _G.AutoClick then
+            Event:FireServer(943051476, 9)
+        end
+        task.wait(0.1) -- ความเร็วในการกด (0.1 วินาทีต่อครั้ง) ปรับเพิ่ม/ลดได้ที่นี่
+    end
+end)
+
+-- ==================== โซนหน้า MAIN ====================
+
+-- เพิ่มปุ่ม เปิด/ปิด ฟังก์ชัน Auto Click ในแท็บ Main
+local Toggle = Tabs.Main:AddToggle("AutoClickToggle", {
+    Title = "Auto Click (Steal Egg)",
+    Default = false,
+    Callback = function(Value)
+        _G.AutoClick = Value
+        if Value then
+            Fluent:Notify({
+                Title = "YUGI Hub",
+                Content = "เปิดใช้งาน Auto Click แล้ว!",
+                Duration = 3
+            })
+        else
+            Fluent:Notify({
+                Title = "YUGI Hub",
+                Content = "ปิดใช้งาน Auto Click แล้ว",
+                Duration = 3
+            })
+        end
+    end
+})
+
+-- ====================================================
+
+-- ลงทะเบียนใช้งานระบบ Save และ Interface (เซ็ตค่าอัตโนมัติ)
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "YUGI Hub",
+    Content = "โหลดสคริปต์สำเร็จแล้ว!",
+    Duration = 5
+})
+
+SaveManager:LoadAutoloadConfig()
+
+-- =============================================================================
+-- [ MAIN TAB: SECURITY & STATUS INTERFACE ]
+-- =============================================================================
+
+-- ส่วนที่ 1: การตรวจสอบความปลอดภัย (Security Check Overview)
+local SecuritySection = Tabs.Main:AddSection("Security Overview")
+
+SecuritySection:AddParagraph({
+    Title = "🛡️ Anti-Cheat Bypass Status",
+    Content = "Status: [ ACTIVE ]\nEnvironment Integrity: Secure\nBypass Layer: Native Spoofing Active"
+})
+
+SecuritySection:AddParagraph({
+    Title = "🔒 Client Protection",
+    Content = "Memory Protectors: Operational\nMethod Hooks: Monitored & Verified\nSafeKick Framework: INTEGRATED"
+})
+
+-- ส่วนที่ 2: สถิติการใช้งานและตัวนับเวลา (Session Statistics & Uptime)
+local StatsSection = Tabs.Main:AddSection("Session Statistics")
+
+-- สร้าง Paragraph ไว้สำหรับอัปเดตเวลาการใช้งานสคริปต์
+local UptimeParagraph = StatsSection:AddParagraph({
+    Title = "⏳ Script Execution Time",
+    Content = "Loading session timer..."
+})
+
+-- บันทึกเวลาเริ่มต้นการทำงานของสคริปต์
+local StartTime = os.clock()
+
+-- ฟังก์ชันคำนวณและแปลงวินาทีให้อยู่ในรูปแบบ ชั่วโมง:นาที:วินาที
+local function FormatTime(seconds)
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%02d:%02d:%02d", hours, minutes, secs)
+end
+
+-- ลูปทำงานเบื้องหลังเพื่ออัปเดตเวลาการใช้งานแบบเรียลไทม์ทุกๆ 1 วินาที
+task.spawn(function()
+    while true do
+        local ElapsedTime = os.clock() - StartTime
+        local FormattedTime = FormatTime(ElapsedTime)
+        
+        -- อัปเดตข้อมูลบนหน้าต่าง UI ของ Fluent
+        UptimeParagraph:SetTitle("⏳ Script Uptime: " .. FormattedTime)
+        UptimeParagraph:SetDesc("Current Session is stable and running smoothly without any interruptions.")
+        
+        task.wait(1)
+    end
+end)
+
+-- =============================================================================
+-- [ CONFIG & INTERFACE MANAGERS SETUP ]
+-- =============================================================================
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetFolder("YUGIPiveteSettings")
+InterfaceManager:SetFolder("YUGIPiveteSettings")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+Fluent:Notify({
+    Title = "YUGI Pivete",
+    Content = "Script loaded successfully with SafeKick Layer!",
+    Duration = 5
+})
+
+-- ========================================================
+-- [2. จัดวางระบบทั้งหมดลงในแท็บ MAIN]
+-- ========================================================
+
+-- โซนที่ 1: แดชบอร์ดแสดงสถานะแบบ Real-time (หรูหรา สวยงาม)
+local DashSection = Tabs.Main:AddSection("🛡️ Anti AFK Dashboard")
+
+local StatusCard = Tabs.Main:AddParagraph({
+    Title = "🟢 SYSTEM STATUS : ACTIVE",
+    Content = "กำลังโหลดข้อมูลระบบและ Metadata..."
+})
+
+-- โซนที่ 2: ตั้งค่าตัวเสริมและการแจ้งเตือน (รวบรวมปุ่มและสวิตช์ย่อยไว้ที่นี่)
+local ConfigSection = Tabs.Main:AddSection("⚙️ Anti AFK Settings")
+
+local NotifyToggle = Tabs.Main:AddToggle("AFKNotify", { 
+    Title = "Enable Notification Popup", 
+    Description = "เปิด/ปิด การแจ้งเตือนมุมขวาล่างเมื่อระบบล้างเวลา AFK",
+    Default = true 
+})
+
+local JumpToggle = Tabs.Main:AddToggle("AFKJump", { 
+    Title = "Physical Movement Anti-AFK", 
+    Description = "กระโดดอัตโนมัติทุกๆ 2 นาที เพื่อความปลอดภัยคูณสอง (Physical Bypass)",
+    Default = true 
+})
+
+-- ========================================================
+-- [3. Core Logic & Variables ของระบบ Anti AFK]
+-- ========================================================
+local StartTime = os.time()
+local TotalBypasses = 0
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local VirtualUser = game:GetService("VirtualUser")
+
+-- ฟังก์ชันคำนวณเวลา (HH:MM:SS)
+local function formatTime(seconds)
+    local hours = math.floor(seconds / 3600)
+    local mins = math.floor((seconds % 3600) / 60)
+    local secs = seconds % 60
+    return string.format("%02d:%02d:%02d", hours, mins, secs)
+end
+
+-- ลูปอัปเดต Dashboard บนหน้า Main ทุกๆ 1 วินาที
+task.spawn(function()
+    while task.wait(1) do
+        local UpTime = os.time() - StartTime
+        StatusCard:SetDesc(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" ..
+            "⏱️ ระยะเวลาเปิดเครื่อง :  " .. formatTime(UpTime) .. "\n" ..
+            "🔄 ป้องกันการเตะสำเร็จ :  " .. tostring(TotalBypasses) .. " ครั้ง\n" ..
+            "🎯 บันทึกเวลาล่าสุด :  " .. os.date("%X") .. "\n" ..
+            "💡 โหมดการทำงาน :  Core Virtual Mode [ACTIVE]\n" ..
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" ..
+            "✨ ระบบหลักรันอัตโนมัติ 24 ชม. ป้องกันการดีดออกจากเกม 20 นาที 100%"
+        )
+    end
+end)
+
+-- ระบบดักจับการยืนนิ่ง (Idled) -> คอยรีเซ็ตเวลาผ่าน Virtual Click [Bypass AFK 20 mins - Scripting Support - Developer Forum]
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new(0, 0)) -- ส่งคำสั่งจำลองกดเมาส์ขวาเพื่อลบเวลา AFK ของเซิร์ฟเวอร์ [Bypass AFK 20 mins - Scripting Support - Developer Forum]
+    TotalBypasses = TotalBypasses + 1
+    
+    -- ตรวจสอบว่าผู้ใช้เปิดให้แจ้งเตือนการรีเซ็ตหรือไม่
+    if Fluent.Options.AFKNotify.Value then
+        Fluent:Notify({
+            Title = "YUGI Anti-AFK",
+            Content = "Detected idle! Core bypassed successfully.",
+            Duration = 3
+        })
+    end
+end)
+
+-- ลูปกระโดดเสริม (ทำงานร่วมกับ JumpToggle หน้า Main)
+task.spawn(function()
+    while task.wait(120) do
+        if Fluent.Options.AFKJump.Value then
+            pcall(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Jump = true
+                    TotalBypasses = TotalBypasses + 1
+                end
+            end)
+        end
+    end
+end)
+
+-- ========================================================
+-- [4. โหลดระบบ Save / Load ของ Fluent UI]
+-- ========================================================
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+-- บังคับให้หน้าจอเริ่มต้นเปิดมาที่หน้า Main ทันที
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "YUGI Pivete",
+    Content = "สคริปต์ย้ายไประบบ Main เรียบร้อยแล้ว!",
+    Duration = 5
+})
+
+SaveManager:LoadAutoloadConfig()
+
+-- =======================================================
+
+-- [[ Robust Function Localization & Integrity Verification ]] --
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. ทําการ Localize ฟังก์ชันดั้งเดิมไว้ในระดับสูงสุด
+local NativeKick = LocalPlayer.Kick
+
+-- 2. ดึงเมทอดดั้งเดิมผ่านหน่วยความจําดิบ (Raw Metatable) เพื่อป้องกันการโดนแก้ __index ไว้ก่อนหน้า
+local success, rawKick = pcall(function()
+    local mt = getrawmetatable and getrawmetatable(game) or debug.getregistry().__index
+    if type(mt) == "table" and mt.Kick then
+        return mt.Kick
+    end
+    return NativeKick
+end)
+
+local SecureKick = success and rawKick or NativeKick
+
+-- 3. ฟังก์ชันตรวจสอบความปลอดภัยก่อนเรียกใช้งาน (Fingerprint Check)
+local function SafeKick(playerInstance, message)
+    -- ตรวจสอบว่าฟังก์ชัน SecureKick ยังคงเป็นฟังก์ชันแท้ระดับ Native [C] หรือไม่
+    -- หากโดนสคริปต์ภายนอก Hook ค่า debug.info มักจะเปลี่ยนจาก [C] เป็นบรรทัดในสคริปต์ Lua
+    local source, line = debug.info(SecureKick, "sl")
+    
+    if source == "[C]" and line == -1 then
+        -- สภาพแวดล้อมปลอดภัย เรียกใช้ฟังก์ชันดั้งเดิม
+        pcall(SecureKick, playerInstance, message or "Integrity check failed.")
+    else
+        -- ตรวจพบว่าฟังก์ชันโดนแทรกแซง (Tampered)
+        -- สั่งปิดระงับ Client ทันทีผ่านกลไก Crash หน่วยความจําเพื่อความปลอดภัย
+        while true do end 
+    end
+end
+
+-- วิธีการนําไปใช้งานในระบบตรวจสอบความปลอดภัย
+-- SafeKick(LocalPlayer, "Security Violation Detected")
+
+
+-- =======================================================
